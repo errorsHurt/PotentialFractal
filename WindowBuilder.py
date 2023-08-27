@@ -1,19 +1,56 @@
 import sys
+import numpy as np
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QAction, QToolBar, QLineEdit
+from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QAction, QToolBar, QLineEdit, QVBoxLayout, QWidget
+
+import matplotlib
+from matplotlib import pyplot as plt
+
+matplotlib.use('Qt5Agg')
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT as NavigationToolbar
+from matplotlib.figure import Figure
 
 
 class Window(QMainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
+
         self.setWindowTitle("Potential Fractals")
-        self.resize(800, 800)
-        self.centralWidget = QLabel("Hello, World")
-        self.centralWidget.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-        self.setCentralWidget(self.centralWidget)
+        self.resize(1000, 1000)
+
+        self.sc = MplCanvas(self, width=5, height=4, dpi=100)
+        toolbar = NavigationToolbar(self.sc, self)
+        layout = QVBoxLayout()
+        layout.addWidget(toolbar)
+        layout.addWidget(self.sc)
+        widget = QWidget()
+        widget.setLayout(layout)
+        self.setCentralWidget(widget)
         self._createactions()
         self._createmenubar()
         self._createToolBars()
+        self._connectActions()
+        self.show()
+
+    def run(self):
+        size = int(self.canvasSizeTextLine.text())
+        data = np.random.random((size, size, 1))
+        self.sc.axes.set_xlim(0, size, auto=True)
+        self.sc.axes.set_ylim(0, size, auto=True)
+        self.sc.axes.cla()
+        self.sc.axes.imshow(data, cmap='Greens', interpolation='nearest', origin='lower')
+        self.sc.draw()
+
+    def save(self):
+        plt.savefig("plot.png")
+
+    def _connectActions(self):
+        self.runAction.triggered.connect(self.run)
+        self.exitAction.triggered.connect(self.close)
+        self.saveAction.triggered.connect(self.save)
+
+
+
 
     def _createactions(self):
         # Creating actions using the second constructor
@@ -27,6 +64,7 @@ class Window(QMainWindow):
         self.helpContentAction = QAction("&Help Content", self)
         self.aboutAction = QAction("&About", self)
         self.runAction = QAction("&Run", self)
+        self.createMassAction = QAction("&Create Mass")
         self.potential1r = QAction("1/r potential", self)
         self.potential2r = QAction("1/r^2 potential", self)
         self.potentialx = QAction("1/x potential", self)
@@ -56,6 +94,7 @@ class Window(QMainWindow):
         self.addToolBar(Qt.TopToolBarArea, runToolBar)
         runToolBar.addAction(self.runAction)
         runToolBar.addAction(self.saveAction)
+        runToolBar.addAction(self.createMassAction)
         self.simEndTimeTextLabel = QLabel()
         self.simEndTimeTextLabel.setText("Time to simulate : ")
         self.simEndTimeTextLine = QLineEdit()
@@ -93,8 +132,16 @@ class Window(QMainWindow):
         potentialToolBar.addAction(self.potentialy)
         self.addToolBar(Qt.LeftToolBarArea, potentialToolBar)
 
+class MplCanvas(FigureCanvasQTAgg):
+
+    def __init__(self, parent=None, width=5, height=4, dpi=100):
+        fig = Figure(figsize=(width, height), dpi=dpi)
+        self.axes = fig.add_subplot(111)
+        super(MplCanvas, self).__init__(fig)
+
+
 def createWindow():
     app = QApplication(sys.argv)
     window = Window()
-    window.show()
+
     sys.exit(app.exec_())
