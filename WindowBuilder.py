@@ -1,7 +1,8 @@
 import sys
 import numpy as np
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QAction, QToolBar, QLineEdit, QVBoxLayout, QWidget
+from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QAction, QToolBar, QLineEdit, QVBoxLayout, QWidget, \
+    QDialog, QDialogButtonBox
 
 import matplotlib
 from matplotlib import pyplot as plt
@@ -41,14 +42,23 @@ class Window(QMainWindow):
         self.sc.axes.imshow(data, cmap='Greens', interpolation='nearest', origin='lower')
         self.sc.draw()
 
+    def drawMass(self, mass, x, y):
+        self.sc.axes.scatter(x, y)
+
     def save(self):
         plt.savefig("plot.png")
+
+    def createMass(self):
+        dlg = MassDialog(self)
+        dlg.exec()
+
+
 
     def _connectActions(self):
         self.runAction.triggered.connect(self.run)
         self.exitAction.triggered.connect(self.close)
         self.saveAction.triggered.connect(self.save)
-
+        self.createMassAction.triggered.connect(self.createMass)
 
 
 
@@ -136,9 +146,40 @@ class MplCanvas(FigureCanvasQTAgg):
 
     def __init__(self, parent=None, width=5, height=4, dpi=100):
         fig = Figure(figsize=(width, height), dpi=dpi)
-        self.axes = fig.add_subplot(111)
+        self.axes = fig.add_subplot()
         super(MplCanvas, self).__init__(fig)
 
+class MassDialog(QDialog):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.setWindowTitle("specify mass attributes")
+
+        QBtn = QDialogButtonBox.Ok | QDialogButtonBox.Cancel
+        self.buttonBox = QDialogButtonBox(QBtn)
+        self.buttonBox.accepted.connect(self.accept)
+        self.buttonBox.rejected.connect(self.reject)
+
+        self.layout = QVBoxLayout()
+        self.massLabel = QLabel("mass: ")
+        self.xLabel = QLabel("x-coord: ")
+        self.yLabel = QLabel("y-coord: ")
+        self.massLine = QLineEdit()
+        self.xLine = QLineEdit()
+        self.yLine = QLineEdit()
+        self.layout.addWidget(self.massLabel)
+        self.layout.addWidget(self.massLine)
+        self.layout.addWidget(self.xLabel)
+        self.layout.addWidget(self.xLine)
+        self.layout.addWidget(self.yLabel)
+        self.layout.addWidget(self.yLine)
+        self.layout.addWidget(self.buttonBox)
+        self.setLayout(self.layout)
+
+    def accept(self):
+        mass = self.massLine.text()
+        x = self.xLine.text()
+        y = self.yLine.text()
+        # create body instance and draw it
 
 def createWindow():
     app = QApplication(sys.argv)
