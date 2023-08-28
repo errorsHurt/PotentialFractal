@@ -1,4 +1,4 @@
-import sys
+import sys as system
 import numpy as np
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QAction, QToolBar, QLineEdit, QVBoxLayout, QWidget, \
@@ -19,18 +19,24 @@ class Window(QMainWindow):
         self.setWindowTitle("Potential Fractals")
         self.resize(1000, 1000)
 
+        #TODO Auslagern: CanvasBuilder
+        widget = QWidget()
+        layout = QVBoxLayout()
+
         self.sc = MplCanvas(self, width=5, height=4, dpi=100)
         toolbar = NavigationToolbar(self.sc, self)
-        layout = QVBoxLayout()
+
         layout.addWidget(toolbar)
         layout.addWidget(self.sc)
-        widget = QWidget()
+
         widget.setLayout(layout)
+
         self.setCentralWidget(widget)
-        self._createactions()
-        self._createmenubar()
-        self._createToolBars()
+        self._createActions()
+        self._createMenubar()
+        self._createToolbars()
         self._connectActions()
+
         self.show()
 
     def run(self):
@@ -52,17 +58,13 @@ class Window(QMainWindow):
         dlg = MassDialog(self)
         dlg.exec()
 
-
-
     def _connectActions(self):
         self.runAction.triggered.connect(self.run)
         self.exitAction.triggered.connect(self.close)
         self.saveAction.triggered.connect(self.save)
         self.createMassAction.triggered.connect(self.createMass)
 
-
-
-    def _createactions(self):
+    def _createActions(self):
         # Creating actions using the second constructor
         self.newAction = QAction("&New", self)
         self.openAction = QAction("&Open...", self)
@@ -80,9 +82,7 @@ class Window(QMainWindow):
         self.potentialx = QAction("1/x potential", self)
         self.potentialy = QAction("1/y potential", self)
 
-
-
-    def _createmenubar(self):
+    def _createMenubar(self):
         menuBar = self.menuBar()
         fileMenu = menuBar.addMenu("&File")
         fileMenu.addAction(self.newAction)
@@ -99,32 +99,41 @@ class Window(QMainWindow):
         helpMenu.addAction(self.helpContentAction)
         helpMenu.addAction(self.aboutAction)
 
-    def _createToolBars(self):
+    #TODO Unterteilen in Methode für horizontale und vertikale
+    def _createToolbars(self):
+
+        #TODO Naming
         runToolBar = QToolBar("Run", self)
         self.addToolBar(Qt.TopToolBarArea, runToolBar)
+
         runToolBar.addAction(self.runAction)
         runToolBar.addAction(self.saveAction)
         runToolBar.addAction(self.createMassAction)
+
+        #TODO Extrahieren in Methode (Maybe in Layout zum Canvas verschieben)
         self.simEndTimeTextLabel = QLabel()
         self.simEndTimeTextLabel.setText("Time to simulate : ")
         self.simEndTimeTextLine = QLineEdit()
         self.simEndTimeTextLine.setFixedWidth(50)
         self.simEndTimeTextLine.setText("1000")
+
         self.simDeltaTimeTextLabel = QLabel()
         self.simDeltaTimeTextLabel.setText(" Time between simulation steps : ")
         self.simDeltaTimeTextLine = QLineEdit()
-        self.simDeltaTimeTextLine.setText("10")
         self.simDeltaTimeTextLine.setFixedWidth(30)
+        self.simDeltaTimeTextLine.setText("10")
+
         self.canvasSizeTextLabel = QLabel()
         self.canvasSizeTextLabel.setText(" Sidelength of Canvas : ")
         self.canvasSizeTextLine = QLineEdit()
-        self.canvasSizeTextLine.setText("10")
         self.canvasSizeTextLine.setFixedWidth(30)
+        self.canvasSizeTextLine.setText("10")
+
         self.canvasScaleTextLabel = QLabel()
         self.canvasScaleTextLabel.setText(" ratio of distance to pixelsize")
         self.canvasScaleTextLine = QLineEdit()
-        self.canvasScaleTextLine.setText("1")
         self.canvasScaleTextLine.setFixedWidth(20)
+        self.canvasScaleTextLine.setText("1")
 
         runToolBar.addWidget(self.simEndTimeTextLabel)
         runToolBar.addWidget(self.simEndTimeTextLine)
@@ -142,6 +151,7 @@ class Window(QMainWindow):
         potentialToolBar.addAction(self.potentialy)
         self.addToolBar(Qt.LeftToolBarArea, potentialToolBar)
 
+
 class MplCanvas(FigureCanvasQTAgg):
 
     def __init__(self, parent=None, width=5, height=4, dpi=100):
@@ -149,6 +159,8 @@ class MplCanvas(FigureCanvasQTAgg):
         self.axes = fig.add_subplot()
         super(MplCanvas, self).__init__(fig)
 
+
+#TODO Auslagern in eigene Klasse/Methode
 class MassDialog(QDialog):
     def __init__(self, parent):
         super().__init__(parent)
@@ -179,10 +191,12 @@ class MassDialog(QDialog):
         mass = self.massLine.text()
         x = self.xLine.text()
         y = self.yLine.text()
-        # create body instance and draw it
+        # create body instance and draw
 
-def createWindow():
-    app = QApplication(sys.argv)
+
+def createWindow() -> Window:
+    app = QApplication(system.argv)
     window = Window()
+    app.exec_()
 
-    sys.exit(app.exec_())
+    return window

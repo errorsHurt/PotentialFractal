@@ -1,3 +1,3 @@
 import WindowBuilder as WB
 
-WB.createWindow()
+window = WB.createWindow()
